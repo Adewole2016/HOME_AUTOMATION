@@ -5,6 +5,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from .models import Device, DeviceReport
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+
+
 
 # --- Device Authentication ---
 def _auth_device(request):
@@ -12,7 +20,7 @@ def _auth_device(request):
     return token == settings.DEVICE_SHARED_TOKEN
 
 
-
+@login_required(login_url='login')
 def dashboard(request):
     device, _ = Device.objects.get_or_create(
         device_id='NODEMCU-01', defaults={'name': 'Living Room Controller'}
@@ -26,12 +34,9 @@ def dashboard(request):
     })
 
 
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from .models import Device
 
-@csrf_exempt
+
+@login_required
 def toggle_channel(request, device_id, channel: int):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=400)
@@ -55,7 +60,7 @@ def toggle_channel(request, device_id, channel: int):
     })
 
 
-@csrf_exempt
+@login_required
 def all_channels(request, device_id, action: str):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=400)
@@ -134,3 +139,28 @@ def api_report_state(request, device_id: str):
         ch4=bool(payload.get('ch4')),
     )
     return JsonResponse({'ok': True, 'created_at': rep.created_at.isoformat()})
+    
+    
+   
+
+def user_login(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+        
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('dashboard')
+        else:
+            messages.error(request, 'Invalid username or password')
+    return render(request, 'login.html')
+
+
+def user_logout(request):
+    logout(request)
+    messages.info(request, 'You have been logged out.')
+    return redirect('login')
+
