@@ -12,11 +12,22 @@
 </head>
 <body class="bg-light">
 <div class="container py-4">
-  <h1 class="mb-4 text-center">Home Automation Dashboard</h1>
 
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Home Automation Dashboard</h1>
+    <div>
+      <span class="me-2">Logged in as: {{ request.user.username }}</span>
+      <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm">Logout</a>
+    </div>
+  </div>
+
+  <!-- Device Card -->
   <div class="card mb-4">
     <div class="card-body">
       <h5 class="card-title">{{ device.name }} (ID: {{ device.device_id }})</h5>
+
+      <!-- Controls -->
       <div class="d-flex gap-2 flex-wrap mb-3">
         <button type="button" class="btn btn-primary" onclick="toggleChannel(1)">ROOM 1 LIGHT</button>
         <button type="button" class="btn btn-primary" onclick="toggleChannel(2)">ROOM 2 LIGHT</button>
@@ -26,6 +37,7 @@
         <button type="button" class="btn btn-danger" onclick="allChannels('off')">SWITCH OFF ALL ROOM LIGHT</button>
       </div>
 
+      <!-- States -->
       <div class="row">
         <div class="col-md-6 mb-3">
           <h6>Desired State</h6>
@@ -40,7 +52,7 @@
         <div class="col-md-6 mb-3">
           <h6>Recent Device Reports</h6>
           <table class="table table-sm" id="report-table">
-            <thead class="table-light"><tr><th>Time</th><th>ROOM 1</th><th> ROOM 2</th><th>ROOM 3</th><th>ROOM 4</th></tr></thead>
+            <thead class="table-light"><tr><th>Time</th><th>CH1</th><th>CH2</th><th>CH3</th><th>CH4</th></tr></thead>
             <tbody>
               {% for r in reports %}
               <tr>
@@ -68,10 +80,14 @@
     <code>POST /api/device/&lt;device_id&gt;/report/</code><br>
     Include header <code>X-DEVICE-TOKEN</code> with the shared token.
   </div>
+
 </div>
 
 <script>
-  // Get CSRF token from cookie
+  const DEVICE_ID = "{{ device.device_id }}";
+  const TOKEN = "{{ DEVICE_SHARED_TOKEN }}";
+
+  // CSRF token helper
   function getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== '') {
@@ -86,9 +102,6 @@
       }
       return cookieValue;
   }
-
-  const DEVICE_ID = "{{ device.device_id }}";
-  const TOKEN = "{{ DEVICE_SHARED_TOKEN }}";
   const csrftoken = getCookie('csrftoken');
 
   async function postJSON(url, data={}) {
