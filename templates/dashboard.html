@@ -1,111 +1,227 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Home Automation Dashboard</title>
+  
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
   <style>
-    body { background-color: #f8f9fa; }
-    .badge-on { background-color: #28a745; }
-    .badge-off { background-color: #dc3545; }
-    .card { border-radius: 1rem; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-    footer { font-size: 0.9rem; }
+    :root {
+      --primary-color: #0d6efd;
+      --success-color: #198754;
+      --danger-color: #dc3545;
+      --light-gray: #f8f9fa;
+      --medium-gray: #e9ecef;
+      --dark-gray: #6c757d;
+      --card-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1 );
+      --card-border-radius: 0.75rem;
+    }
+
+    body {
+      background-color: var(--light-gray);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .navbar {
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .main-content {
+      padding-top: 2rem;
+      padding-bottom: 4rem;
+    }
+
+    .device-card {
+      border: none;
+      border-radius: var(--card-border-radius);
+      box-shadow: var(--card-shadow);
+      transition: transform 0.2s ease-in-out;
+    }
+    .device-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card-header {
+      background-color: var(--primary-color);
+      color: white;
+      border-top-left-radius: var(--card-border-radius);
+      border-top-right-radius: var(--card-border-radius);
+      padding: 1.25rem;
+    }
+
+    .card-title .device-id {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .control-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      font-size: 1rem;
+      font-weight: 500;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .control-btn .icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .btn-on {
+      background-color: var(--success-color);
+      color: white;
+      border-color: var(--success-color);
+    }
+    .btn-on:hover {
+      background-color: #146c43;
+      border-color: #13653f;
+    }
+
+    .btn-off {
+      background-color: var(--danger-color);
+      color: white;
+      border-color: var(--danger-color);
+    }
+    .btn-off:hover {
+      background-color: #b02a37;
+      border-color: #a52834;
+    }
+
+    .status-badge {
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.5em 0.8em;
+    }
+    .badge-on { background-color: var(--success-color); }
+    .badge-off { background-color: var(--danger-color); }
+
+    .section-title {
+      border-bottom: 2px solid var(--medium-gray);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      color: var(--dark-gray);
+    }
+    
+    .table-responsive {
+      max-height: 300px;
+    }
+
+    .footer {
+      background-color: #ffffff;
+      border-top: 1px solid var(--medium-gray);
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
 
   <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-    <div class="container-fluid">
-      <a class="navbar-brand fw-bold" href="#">🏠 Home Automation Dashboard</a>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="#"><i class="bi bi-house-heart-fill me-2"></i>Home Automation</a>
       <div class="d-flex align-items-center">
-        <span class="text-white me-3">Logged in as: <strong>{{ request.user.username }}</strong></span>
-        <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Logout</a>
+        <span class="navbar-text me-3">
+          Welcome, <strong>{{ request.user.username }}</strong>
+        </span>
+        <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
       </div>
     </div>
   </nav>
 
-  <div class="container py-4">
+  <!-- Main Content -->
+  <main class="main-content container">
+    <div class="card device-card">
+      <div class="card-header">
+        <h4 class="card-title mb-0 d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-cpu-fill me-2"></i>{{ device.name }}</span>
+          <span class="device-id fw-normal">(ID: {{ device.device_id }})</span>
+        </h4>
+      </div>
+      <div class="card-body p-4">
 
-    <!-- Device Card -->
-    <div class="card mb-4">
-      <div class="card-body">
-        <h4 class="card-title mb-4">{{ device.name }} <small class="text-muted">(ID: {{ device.device_id }})</small></h4>
-
-        <!-- Controls -->
-        <div class="d-flex flex-wrap gap-2 mb-4">
-          <button type="button" 
-                  class="btn {% if device.desired_ch1 %}btn-success{% else %}btn-danger{% endif %}" 
-                  onclick="toggleChannel(1)">
-            ROOM 1 LIGHT
+        <!-- Controls Section -->
+        <h5 class="section-title">Controls</h5>
+        <div class="control-grid mb-4">
+          <button type="button" class="control-btn {% if device.desired_ch1 %}btn-on{% else %}btn-off{% endif %}" onclick="toggleChannel(1)">
+            <i class="icon bi bi-lightbulb-fill"></i><span>Room 1 Light</span>
           </button>
-          <button type="button" 
-                  class="btn {% if device.desired_ch2 %}btn-success{% else %}btn-danger{% endif %}" 
-                  onclick="toggleChannel(2)">
-            ROOM 2 LIGHT
+          <button type="button" class="control-btn {% if device.desired_ch2 %}btn-on{% else %}btn-off{% endif %}" onclick="toggleChannel(2)">
+            <i class="icon bi bi-lightbulb-fill"></i><span>Room 2 Light</span>
           </button>
-          <button type="button" 
-                  class="btn {% if device.desired_ch3 %}btn-success{% else %}btn-danger{% endif %}" 
-                  onclick="toggleChannel(3)">
-            ROOM 3 LIGHT
+          <button type="button" class="control-btn {% if device.desired_ch3 %}btn-on{% else %}btn-off{% endif %}" onclick="toggleChannel(3)">
+            <i class="icon bi bi-lightbulb-fill"></i><span>Room 3 Light</span>
           </button>
-          <button type="button" 
-                  class="btn {% if device.desired_ch4 %}btn-success{% else %}btn-danger{% endif %}" 
-                  onclick="toggleChannel(4)">
-            ROOM 4 LIGHT
+          <button type="button" class="control-btn {% if device.desired_ch4 %}btn-on{% else %}btn-off{% endif %}" onclick="toggleChannel(4)">
+            <i class="icon bi bi-lightbulb-fill"></i><span>Room 4 Light</span>
           </button>
         </div>
-
-        <div class="d-flex flex-wrap gap-2 mb-4">
-          <button type="button" class="btn btn-success" onclick="allChannels('on')">SWITCH ON ALL</button>
-          <button type="button" class="btn btn-danger" onclick="allChannels('off')">SWITCH OFF ALL</button>
+        <div class="d-flex flex-wrap gap-2 mb-5">
+          <button type="button" class="btn btn-success flex-grow-1" onclick="allChannels('on')"><i class="bi bi-check-circle-fill me-2"></i>Switch On All</button>
+          <button type="button" class="btn btn-danger flex-grow-1" onclick="allChannels('off')"><i class="bi bi-x-circle-fill me-2"></i>Switch Off All</button>
         </div>
 
-        <!-- States and Reports -->
+        <!-- Status & Reports Section -->
         <div class="row">
-          <div class="col-md-6 mb-3">
-            <h6 class="fw-bold">Desired State</h6>
+          <div class="col-lg-5 mb-4 mb-lg-0">
+            <h5 class="section-title">Live Status</h5>
             <ul class="list-group" id="desired-state">
-              <li class="list-group-item d-flex justify-content-between">ROOM 1 <span class="badge {{ device.desired_ch1|yesno:'badge-on,badge-off' }}" id="ch1-state">{{ device.desired_ch1|yesno:"ON,OFF" }}</span></li>
-              <li class="list-group-item d-flex justify-content-between">ROOM 2 <span class="badge {{ device.desired_ch2|yesno:'badge-on,badge-off' }}" id="ch2-state">{{ device.desired_ch2|yesno:"ON,OFF" }}</span></li>
-              <li class="list-group-item d-flex justify-content-between">ROOM 3 <span class="badge {{ device.desired_ch3|yesno:'badge-on,badge-off' }}" id="ch3-state">{{ device.desired_ch3|yesno:"ON,OFF" }}</span></li>
-              <li class="list-group-item d-flex justify-content-between">ROOM 4 <span class="badge {{ device.desired_ch4|yesno:'badge-on,badge-off' }}" id="ch4-state">{{ device.desired_ch4|yesno:"ON,OFF" }}</span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">Room 1 <span class="status-badge badge {{ device.desired_ch1|yesno:'badge-on,badge-off' }}" id="ch1-state">{{ device.desired_ch1|yesno:"ON,OFF" }}</span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">Room 2 <span class="status-badge badge {{ device.desired_ch2|yesno:'badge-on,badge-off' }}" id="ch2-state">{{ device.desired_ch2|yesno:"ON,OFF" }}</span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">Room 3 <span class="status-badge badge {{ device.desired_ch3|yesno:'badge-on,badge-off' }}" id="ch3-state">{{ device.desired_ch3|yesno:"ON,OFF" }}</span></li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">Room 4 <span class="status-badge badge {{ device.desired_ch4|yesno:'badge-on,badge-off' }}" id="ch4-state">{{ device.desired_ch4|yesno:"ON,OFF" }}</span></li>
             </ul>
           </div>
 
-          <div class="col-md-6 mb-3">
-            <h6 class="fw-bold">Recent Device Reports</h6>
+          <div class="col-lg-7">
+            <h5 class="section-title">Recent Device Reports</h5>
             <div class="table-responsive">
-              <table class="table table-sm table-striped align-middle" id="report-table">
+              <table class="table table-sm table-striped table-hover align-middle" id="report-table">
                 <thead class="table-light">
-                  <tr><th>Time</th><th>ROOM 1</th><th>ROOM 2</th><th>ROOM 3</th><th>ROOM 4</th></tr>
+                  <tr><th>Time</th><th>Room 1</th><th>Room 2</th><th>Room 3</th><th>Room 4</th></tr>
                 </thead>
                 <tbody>
                   {% for r in reports %}
                   <tr>
-                    <td>{{ r.created_at }}</td>
-                    <td>{{ r.ch1|yesno:"ON,OFF" }}</td>
-                    <td>{{ r.ch2|yesno:"ON,OFF" }}</td>
-                    <td>{{ r.ch3|yesno:"ON,OFF" }}</td>
-                    <td>{{ r.ch4|yesno:"ON,OFF" }}</td>
+                    <td>{{ r.created_at|date:"Y-m-d H:i:s" }}</td>
+                    <td><i class="bi {{ r.ch1|yesno:'bi-check-circle-fill text-success,bi-x-circle-fill text-danger' }}"></i></td>
+                    <td><i class="bi {{ r.ch2|yesno:'bi-check-circle-fill text-success,bi-x-circle-fill text-danger' }}"></i></td>
+                    <td><i class="bi {{ r.ch3|yesno:'bi-check-circle-fill text-success,bi-x-circle-fill text-danger' }}"></i></td>
+                    <td><i class="bi {{ r.ch4|yesno:'bi-check-circle-fill text-success,bi-x-circle-fill text-danger' }}"></i></td>
                   </tr>
                   {% empty %}
-                  <tr><td colspan="5" class="text-muted">No reports yet.</td></tr>
+                  <tr><td colspan="5" class="text-center text-muted p-3">No reports yet.</td></tr>
                   {% endfor %}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
-
-        <p class="mt-3 text-muted">📡 Last seen: <span id="last-seen">{{ device.last_seen }}</span></p>
+      </div>
+      <div class="card-footer bg-light text-muted text-center py-2">
+        <i class="bi bi-clock-history me-1"></i>Last seen: <span id="last-seen">{{ device.last_seen|date:"Y-m-d H:i:s" }}</span>
       </div>
     </div>
-  </div>
+  </main>
 
   <!-- Footer -->
-  <footer class="bg-light text-center text-muted py-3 shadow-sm">
+  <footer class="footer text-center text-muted py-3">
     &copy; 2025 Home Automation Dashboard. All rights reserved.
   </footer>
 
@@ -140,11 +256,22 @@
           },
           body: JSON.stringify(data)
       });
-      if (!resp.ok) throw new Error(resp.statusText);
+      if (!resp.ok) {
+        const errorText = await resp.text();
+        throw new Error(`HTTP ${resp.status}: ${errorText}`);
+      }
       return await resp.json();
   }
 
-  async function fetchDesiredState() {
+  function formatDateTime(dateString) {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString(undefined, { 
+        year: 'numeric', month: 'short', day: 'numeric', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit' 
+    });
+  }
+
+  async function fetchAndUpdateState() {
       try {
           const resp = await fetch(`/api/device/${DEVICE_ID}/desired/`, {
               headers: { 'X-DEVICE-TOKEN': TOKEN }
@@ -153,65 +280,73 @@
           const data = await resp.json();
           if (!data.desired) return;
 
-          // update badges
-          ['ch1','ch2','ch3','ch4'].forEach(ch => {
-              const elem = document.getElementById(`${ch}-state`);
-              elem.textContent = data.desired[ch] ? 'ON' : 'OFF';
-              elem.className = `badge ${data.desired[ch] ? 'badge-on' : 'badge-off'}`;
-          });
-
-          // update button colors
+          // Update status badges and control buttons
           ['ch1','ch2','ch3','ch4'].forEach((ch, idx) => {
-              const btn = document.querySelector(`button[onclick="toggleChannel(${idx+1})"]`);
+              const channelNum = idx + 1;
+              const isOn = data.desired[ch];
+              
+              // Update status badge
+              const stateElem = document.getElementById(`${ch}-state`);
+              if (stateElem) {
+                stateElem.textContent = isOn ? 'ON' : 'OFF';
+                stateElem.className = `status-badge badge ${isOn ? 'badge-on' : 'badge-off'}`;
+              }
+
+              // Update control button
+              const btn = document.querySelector(`button[onclick="toggleChannel(${channelNum})"]`);
               if (btn) {
-                  btn.className = `btn ${data.desired[ch] ? 'btn-success' : 'btn-danger'}`;
+                  btn.className = `control-btn ${isOn ? 'btn-on' : 'btn-off'}`;
               }
           });
 
-          // update last seen
-          document.getElementById('last-seen').textContent = new Date(data.timestamp).toLocaleString();
+          // Update last seen timestamp
+          document.getElementById('last-seen').textContent = formatDateTime(data.timestamp);
 
-          // update report table
+          // Update report table
           const tableBody = document.getElementById('report-table').querySelector('tbody');
-          tableBody.innerHTML = '';
-          data.reports?.slice(-4).reverse().forEach(r => {
-              tableBody.insertAdjacentHTML('beforeend', `
-                  <tr>
-                      <td>${new Date(r.created_at).toLocaleString()}</td>
-                      <td>${r.ch1 ? 'ON' : 'OFF'}</td>
-                      <td>${r.ch2 ? 'ON' : 'OFF'}</td>
-                      <td>${r.ch3 ? 'ON' : 'OFF'}</td>
-                      <td>${r.ch4 ? 'ON' : 'OFF'}</td>
-                  </tr>
-              `);
-          });
+          if (data.reports && data.reports.length > 0) {
+            tableBody.innerHTML = data.reports.slice(-5).reverse().map(r => `
+                <tr>
+                    <td>${formatDateTime(r.created_at)}</td>
+                    <td><i class="bi ${r.ch1 ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'}"></i></td>
+                    <td><i class="bi ${r.ch2 ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'}"></i></td>
+                    <td><i class="bi ${r.ch3 ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'}"></i></td>
+                    <td><i class="bi ${r.ch4 ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'}"></i></td>
+                </tr>
+            `).join('');
+          } else {
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-3">No reports yet.</td></tr>';
+          }
       } catch(err) {
-          console.error(err);
+          console.error("Failed to fetch state:", err);
       }
   }
 
   async function toggleChannel(ch) {
       try {
           await postJSON(`/device/${DEVICE_ID}/toggle/${ch}/`);
-          fetchDesiredState();
+          fetchAndUpdateState();
       } catch(err) {
           console.error(err);
-          alert('Failed to toggle channel, sign out and sign in ' + ch);
+          alert(`Failed to toggle channel ${ch}. Please check the console for details.`);
       }
   }
 
   async function allChannels(action) {
       try {
           await postJSON(`/device/${DEVICE_ID}/all/${action}/`);
-          fetchDesiredState();
+          fetchAndUpdateState();
       } catch(err) {
           console.error(err);
-          alert('Failed to set all channels, sign out and sign in ' + action);
+          alert(`Failed to switch all channels ${action}. Please check the console for details.`);
       }
   }
 
-  setInterval(fetchDesiredState, 3000);
-  fetchDesiredState();
+  // Initial fetch and periodic updates
+  document.addEventListener('DOMContentLoaded', () => {
+    fetchAndUpdateState();
+    setInterval(fetchAndUpdateState, 5000); // Increased interval to 5s
+  });
 </script>
 </body>
 </html>
