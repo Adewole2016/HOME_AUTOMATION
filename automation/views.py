@@ -23,7 +23,7 @@ def _auth_device(request):
 @login_required(login_url='login')
 def dashboard(request):
     device, _ = Device.objects.get_or_create(
-        device_id='NODEMCU-01', defaults={'name': 'Living Room Controller'}
+        device_id='NODEMCU-01', defaults={'name': 'Home Devices Controller'}
     )
     reports = device.reports.all().order_by('-created_at')[:10]
     
