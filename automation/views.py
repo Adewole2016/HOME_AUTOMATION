@@ -26,7 +26,8 @@ def dashboard(request):
     return render(request, 'dashboard.html', {
         'device': device,
         'reports': reports,
-        'DEVICE_SHARED_TOKEN': settings.DEVICE_SHARED_TOKEN
+        'DEVICE_SHARED_TOKEN': settings.DEVICE_SHARED_TOKEN,
+        'channels': range(1, 11),   # 👈 pass numbers 1–10 to template
     })
 
 
