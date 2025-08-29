@@ -53,7 +53,11 @@ def toggle_channel(request, device_id, channel: int):
         device.desired_ch4 = not device.desired_ch4
 
     device.save()
-    return redirect('dashboard')
+    return JsonResponse({
+        'status': 'success',
+        'channel': channel,
+        'new_state': getattr(device, f'desired_ch{channel}')
+    })
 
 
 @login_required
@@ -69,7 +73,10 @@ def all_channels(request, device_id, action: str):
     device.desired_ch4 = state
     device.save()
 
-    return redirect('dashboard')
+    return JsonResponse({
+        'status': 'success',
+        'new_state': state
+    })
 
 # --- API: Get Desired State + Recent Reports ---
 def api_desired_state(request, device_id: str):
@@ -108,6 +115,7 @@ def api_desired_state(request, device_id: str):
     }
 
     return JsonResponse(data)
+
 
 # --- API: Report Device State ---
 @csrf_exempt
