@@ -29,12 +29,11 @@
 
       <!-- Controls -->
       <div class="d-flex gap-2 flex-wrap mb-3">
-        <button type="button" class="btn btn-primary" onclick="toggleChannel(1)">ROOM 1 LIGHT</button>
-        <button type="button" class="btn btn-primary" onclick="toggleChannel(2)">ROOM 2 LIGHT</button>
-        <button type="button" class="btn btn-primary" onclick="toggleChannel(3)">ROOM 3 LIGHT</button>
-        <button type="button" class="btn btn-primary" onclick="toggleChannel(4)">ROOM 4 LIGHT</button>
-        <button type="button" class="btn btn-success" onclick="allChannels('on')">SWITCH ON ALL ROOM LIGHT</button>
-        <button type="button" class="btn btn-danger" onclick="allChannels('off')">SWITCH OFF ALL ROOM LIGHT</button>
+        {% for i in 1|to:10 %}
+          <button type="button" class="btn btn-primary" onclick="toggleChannel({{ i }})">ROOM {{ i }} LIGHT</button>
+        {% endfor %}
+        <button type="button" class="btn btn-success" onclick="allChannels('on')">SWITCH ON ALL</button>
+        <button type="button" class="btn btn-danger" onclick="allChannels('off')">SWITCH OFF ALL</button>
       </div>
 
       <!-- States -->
@@ -42,28 +41,39 @@
         <div class="col-md-6 mb-3">
           <h6>Desired State</h6>
           <ul class="list-group" id="desired-state">
-            <li class="list-group-item">CH1: <span class="badge {{ device.desired_ch1|yesno:'badge-on,badge-off' }}" id="ch1-state">{{ device.desired_ch1|yesno:"ON,OFF" }}</span></li>
-            <li class="list-group-item">CH2: <span class="badge {{ device.desired_ch2|yesno:'badge-on,badge-off' }}" id="ch2-state">{{ device.desired_ch2|yesno:"ON,OFF" }}</span></li>
-            <li class="list-group-item">CH3: <span class="badge {{ device.desired_ch3|yesno:'badge-on,badge-off' }}" id="ch3-state">{{ device.desired_ch3|yesno:"ON,OFF" }}</span></li>
-            <li class="list-group-item">CH4: <span class="badge {{ device.desired_ch4|yesno:'badge-on,badge-off' }}" id="ch4-state">{{ device.desired_ch4|yesno:"ON,OFF" }}</span></li>
+            {% for i in 1|to:10 %}
+            <li class="list-group-item">
+              CH{{ i }}: 
+              <span class="badge {{ device|attr:'desired_ch'|add:i|yesno:'badge-on,badge-off' }}" 
+                    id="ch{{ i }}-state">
+                {{ device|attr:'desired_ch'|add:i|yesno:"ON,OFF" }}
+              </span>
+            </li>
+            {% endfor %}
           </ul>
         </div>
 
         <div class="col-md-6 mb-3">
           <h6>Recent Device Reports</h6>
           <table class="table table-sm" id="report-table">
-            <thead class="table-light"><tr><th>Time</th><th>CH1</th><th>CH2</th><th>CH3</th><th>CH4</th></tr></thead>
+            <thead class="table-light">
+              <tr>
+                <th>Time</th>
+                {% for i in 1|to:10 %}
+                  <th>CH{{ i }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
             <tbody>
               {% for r in reports %}
               <tr>
                 <td>{{ r.created_at }}</td>
-                <td>{{ r.ch1|yesno:"ON,OFF" }}</td>
-                <td>{{ r.ch2|yesno:"ON,OFF" }}</td>
-                <td>{{ r.ch3|yesno:"ON,OFF" }}</td>
-                <td>{{ r.ch4|yesno:"ON,OFF" }}</td>
+                {% for i in 1|to:10 %}
+                  <td>{{ r|get_attr:"ch"|add:i|yesno:"ON,OFF" }}</td>
+                {% endfor %}
               </tr>
               {% empty %}
-              <tr><td colspan="5" class="text-muted">No reports yet.</td></tr>
+              <tr><td colspan="11" class="text-muted">No reports yet.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -87,7 +97,6 @@
   const DEVICE_ID = "{{ device.device_id }}";
   const TOKEN = "{{ DEVICE_SHARED_TOKEN }}";
 
-  // CSRF token helper
   function getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== '') {
@@ -127,25 +136,23 @@
           const data = await resp.json();
           if (!data.desired) return;
 
-          ['ch1','ch2','ch3','ch4'].forEach(ch => {
+          for (let i = 1; i <= 10; i++) {
+              const ch = `ch${i}`;
               const elem = document.getElementById(`${ch}-state`);
               elem.textContent = data.desired[ch] ? 'ON' : 'OFF';
               elem.className = `badge ${data.desired[ch] ? 'badge-on' : 'badge-off'}`;
-          });
+          }
           document.getElementById('last-seen').textContent = new Date(data.timestamp).toLocaleString();
 
           const tableBody = document.getElementById('report-table').querySelector('tbody');
           tableBody.innerHTML = '';
           data.reports?.forEach(r => {
-              tableBody.insertAdjacentHTML('beforeend', `
-                  <tr>
-                      <td>${new Date(r.created_at).toLocaleString()}</td>
-                      <td>${r.ch1 ? 'ON' : 'OFF'}</td>
-                      <td>${r.ch2 ? 'ON' : 'OFF'}</td>
-                      <td>${r.ch3 ? 'ON' : 'OFF'}</td>
-                      <td>${r.ch4 ? 'ON' : 'OFF'}</td>
-                  </tr>
-              `);
+              let row = `<tr><td>${new Date(r.created_at).toLocaleString()}</td>`;
+              for (let i = 1; i <= 10; i++) {
+                  row += `<td>${r[`ch${i}`] ? 'ON' : 'OFF'}</td>`;
+              }
+              row += '</tr>';
+              tableBody.insertAdjacentHTML('beforeend', row);
           });
       } catch(err) {
           console.error(err);
