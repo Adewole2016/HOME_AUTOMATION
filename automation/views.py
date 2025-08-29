@@ -16,18 +16,27 @@ def _auth_device(request):
     return token == settings.DEVICE_SHARED_TOKEN
 
 
+# --- Dashboard ---
 @login_required(login_url='login')
 def dashboard(request):
     device, _ = Device.objects.get_or_create(
         device_id='NODEMCU-01', defaults={'name': 'Home Device Controller'}
     )
     reports = device.reports.all().order_by('-created_at')[:10]
-    
+
+    # Build template-friendly reports
+    processed_reports = []
+    for r in reports:
+        processed_reports.append({
+            'created_at': r.created_at,
+            'channels': [getattr(r, f'ch{i}', None) for i in range(1, 11)]
+        })
+
     return render(request, 'dashboard.html', {
         'device': device,
-        'reports': reports,
+        'reports': processed_reports,
         'DEVICE_SHARED_TOKEN': settings.DEVICE_SHARED_TOKEN,
-        'channels': range(1, 11),   # 👈 pass numbers 1–10 to template
+        'channels': range(1, 11),
     })
 
 
@@ -42,7 +51,6 @@ def toggle_channel(request, device_id, channel: int):
 
     device = get_object_or_404(Device, device_id=device_id)
 
-    # dynamically flip state
     field = f'desired_ch{channel}'
     current_state = getattr(device, field)
     setattr(device, field, not current_state)
@@ -86,14 +94,14 @@ def api_desired_state(request, device_id: str):
     report_list = [
         {
             'created_at': r.created_at.isoformat(),
-            **{f'ch{i}': getattr(r, f'ch{i}') for i in range(1, 11)}
+            **{f'ch{i}': getattr(r, f'ch{i}', None) for i in range(1, 11)}
         }
         for r in reports
     ]
 
     data = {
         'device_id': device.device_id,
-        'desired': {f'ch{i}': getattr(device, f'desired_ch{i}') for i in range(1, 11)},
+        'desired': {f'ch{i}': getattr(device, f'desired_ch{i}', None) for i in range(1, 11)},
         'timestamp': timezone.now().isoformat(),
         'reports': report_list
     }
@@ -143,4 +151,3 @@ def user_logout(request):
     logout(request)
     messages.info(request, 'You have been logged out.')
     return redirect('login')
-
