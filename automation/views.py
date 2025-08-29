@@ -8,10 +8,6 @@ from .models import Device, DeviceReport
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-
 
 
 # --- Device Authentication ---
@@ -23,43 +19,42 @@ def _auth_device(request):
 @login_required(login_url='login')
 def dashboard(request):
     device, _ = Device.objects.get_or_create(
-        device_id='NODEMCU-01', defaults={'name': 'Living Room Controller'}
+        device_id='NODEMCU-01', defaults={'name': 'Home Device Controller'}
     )
     reports = device.reports.all().order_by('-created_at')[:10]
     
     return render(request, 'dashboard.html', {
         'device': device,
         'reports': reports,
-        'DEVICE_SHARED_TOKEN': settings.DEVICE_SHARED_TOKEN  # Pass token here
+        'DEVICE_SHARED_TOKEN': settings.DEVICE_SHARED_TOKEN
     })
 
 
-
-
+# --- Toggle a single channel ---
 @login_required
 def toggle_channel(request, device_id, channel: int):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=400)
 
+    if not (1 <= channel <= 10):
+        return JsonResponse({'error': 'invalid channel'}, status=400)
+
     device = get_object_or_404(Device, device_id=device_id)
 
-    if channel == 1:
-        device.desired_ch1 = not device.desired_ch1
-    elif channel == 2:
-        device.desired_ch2 = not device.desired_ch2
-    elif channel == 3:
-        device.desired_ch3 = not device.desired_ch3
-    elif channel == 4:
-        device.desired_ch4 = not device.desired_ch4
-
+    # dynamically flip state
+    field = f'desired_ch{channel}'
+    current_state = getattr(device, field)
+    setattr(device, field, not current_state)
     device.save()
+
     return JsonResponse({
         'status': 'success',
         'channel': channel,
-        'new_state': getattr(device, f'desired_ch{channel}')
+        'new_state': getattr(device, field)
     })
 
 
+# --- Turn ALL channels on/off ---
 @login_required
 def all_channels(request, device_id, action: str):
     if request.method != 'POST':
@@ -67,18 +62,15 @@ def all_channels(request, device_id, action: str):
 
     device = get_object_or_404(Device, device_id=device_id)
     state = True if action.lower() == 'on' else False
-    device.desired_ch1 = state
-    device.desired_ch2 = state
-    device.desired_ch3 = state
-    device.desired_ch4 = state
+
+    for i in range(1, 11):
+        setattr(device, f'desired_ch{i}', state)
     device.save()
 
-    return JsonResponse({
-        'status': 'success',
-        'new_state': state
-    })
+    return JsonResponse({'status': 'success', 'new_state': state})
 
-# --- API: Get Desired State + Recent Reports ---
+
+# --- API: Get Desired State + Reports ---
 def api_desired_state(request, device_id: str):
     if not _auth_device(request):
         return JsonResponse({'error': 'unauthorized'}, status=401)
@@ -89,31 +81,21 @@ def api_desired_state(request, device_id: str):
     device.last_seen = timezone.now()
     device.save(update_fields=['last_seen'])
 
-    # Last 10 reports
     reports = device.reports.all().order_by('-created_at')[:10]
     report_list = [
         {
             'created_at': r.created_at.isoformat(),
-            'ch1': r.ch1,
-            'ch2': r.ch2,
-            'ch3': r.ch3,
-            'ch4': r.ch4,
+            **{f'ch{i}': getattr(r, f'ch{i}') for i in range(1, 11)}
         }
         for r in reports
     ]
 
     data = {
         'device_id': device.device_id,
-        'desired': {
-            'ch1': device.desired_ch1,
-            'ch2': device.desired_ch2,
-            'ch3': device.desired_ch3,
-            'ch4': device.desired_ch4,
-        },
+        'desired': {f'ch{i}': getattr(device, f'desired_ch{i}') for i in range(1, 11)},
         'timestamp': timezone.now().isoformat(),
         'reports': report_list
     }
-
     return JsonResponse(data)
 
 
@@ -134,16 +116,12 @@ def api_report_state(request, device_id: str):
     device = get_object_or_404(Device, device_id=device_id)
     rep = DeviceReport.objects.create(
         device=device,
-        ch1=bool(payload.get('ch1')),
-        ch2=bool(payload.get('ch2')),
-        ch3=bool(payload.get('ch3')),
-        ch4=bool(payload.get('ch4')),
+        **{f'ch{i}': bool(payload.get(f'ch{i}')) for i in range(1, 11)}
     )
     return JsonResponse({'ok': True, 'created_at': rep.created_at.isoformat()})
-    
-    
-   
 
+
+# --- User Auth Views ---
 def user_login(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
