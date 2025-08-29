@@ -65,8 +65,8 @@
               {% for r in reports %}
               <tr>
                 <td>{{ r.created_at }}</td>
-                {% for i in channels %}
-                  <td>{{ r|get_attr:"ch"|add:i|yesno:"ON,OFF" }}</td>
+                {% for ch in r.channels %}
+                  <td>{{ ch|yesno:"ON,OFF" }}</td>
                 {% endfor %}
               </tr>
               {% empty %}
