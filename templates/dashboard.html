@@ -174,7 +174,7 @@
           // update report table
           const tableBody = document.getElementById('report-table').querySelector('tbody');
           tableBody.innerHTML = '';
-          data.reports?.slice(-5).reverse().forEach(r => {
+          data.reports?.slice(-4).reverse().forEach(r => {
               tableBody.insertAdjacentHTML('beforeend', `
                   <tr>
                       <td>${new Date(r.created_at).toLocaleString()}</td>
