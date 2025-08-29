@@ -29,7 +29,7 @@
 
       <!-- Controls -->
       <div class="d-flex gap-2 flex-wrap mb-3">
-        {% for i in 1|to:10 %}
+        {% for i in channels %}
           <button type="button" class="btn btn-primary" onclick="toggleChannel({{ i }})">ROOM {{ i }} LIGHT</button>
         {% endfor %}
         <button type="button" class="btn btn-success" onclick="allChannels('on')">SWITCH ON ALL</button>
@@ -41,13 +41,10 @@
         <div class="col-md-6 mb-3">
           <h6>Desired State</h6>
           <ul class="list-group" id="desired-state">
-            {% for i in 1|to:10 %}
+            {% for i in channels %}
             <li class="list-group-item">
               CH{{ i }}: 
-              <span class="badge {{ device|attr:'desired_ch'|add:i|yesno:'badge-on,badge-off' }}" 
-                    id="ch{{ i }}-state">
-                {{ device|attr:'desired_ch'|add:i|yesno:"ON,OFF" }}
-              </span>
+              <span class="badge" id="ch{{ i }}-state">--</span>
             </li>
             {% endfor %}
           </ul>
@@ -59,7 +56,7 @@
             <thead class="table-light">
               <tr>
                 <th>Time</th>
-                {% for i in 1|to:10 %}
+                {% for i in channels %}
                   <th>CH{{ i }}</th>
                 {% endfor %}
               </tr>
@@ -68,7 +65,7 @@
               {% for r in reports %}
               <tr>
                 <td>{{ r.created_at }}</td>
-                {% for i in 1|to:10 %}
+                {% for i in channels %}
                   <td>{{ r|get_attr:"ch"|add:i|yesno:"ON,OFF" }}</td>
                 {% endfor %}
               </tr>
