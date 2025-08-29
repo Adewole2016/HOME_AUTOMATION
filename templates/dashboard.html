@@ -58,17 +58,17 @@
         <div class="col-md-6 mb-3">
           <h6>Desired State</h6>
           <ul class="list-group" id="desired-state">
-            <li class="list-group-item">CH1: <span class="badge {{ device.desired_ch1|yesno:'badge-on,badge-off' }}" id="ch1-state">{{ device.desired_ch1|yesno:"ON,OFF" }}</span></li>
-            <li class="list-group-item">CH2: <span class="badge {{ device.desired_ch2|yesno:'badge-on,badge-off' }}" id="ch2-state">{{ device.desired_ch2|yesno:"ON,OFF" }}</span></li>
-            <li class="list-group-item">CH3: <span class="badge {{ device.desired_ch3|yesno:'badge-on,badge-off' }}" id="ch3-state">{{ device.desired_ch3|yesno:"ON,OFF" }}</span></li>
-            <li class="list-group-item">CH4: <span class="badge {{ device.desired_ch4|yesno:'badge-on,badge-off' }}" id="ch4-state">{{ device.desired_ch4|yesno:"ON,OFF" }}</span></li>
+            <li class="list-group-item">ROOM 1: <span class="badge {{ device.desired_ch1|yesno:'badge-on,badge-off' }}" id="ch1-state">{{ device.desired_ch1|yesno:"ON,OFF" }}</span></li>
+            <li class="list-group-item">ROOM 2: <span class="badge {{ device.desired_ch2|yesno:'badge-on,badge-off' }}" id="ch2-state">{{ device.desired_ch2|yesno:"ON,OFF" }}</span></li>
+            <li class="list-group-item">ROOM 3: <span class="badge {{ device.desired_ch3|yesno:'badge-on,badge-off' }}" id="ch3-state">{{ device.desired_ch3|yesno:"ON,OFF" }}</span></li>
+            <li class="list-group-item">ROOM 4: <span class="badge {{ device.desired_ch4|yesno:'badge-on,badge-off' }}" id="ch4-state">{{ device.desired_ch4|yesno:"ON,OFF" }}</span></li>
           </ul>
         </div>
 
         <div class="col-md-6 mb-3">
           <h6>Recent Device Reports</h6>
           <table class="table table-sm" id="report-table">
-            <thead class="table-light"><tr><th>Time</th><th>CH1</th><th>CH2</th><th>CH3</th><th>CH4</th></tr></thead>
+            <thead class="table-light"><tr><th>Time</th><th>ROOM 1</th><th>ROOM 2</th><th>ROOM 3</th><th>ROOM 4</th></tr></thead>
             <tbody>
               {% for r in reports %}
               <tr>
