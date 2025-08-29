@@ -25,7 +25,7 @@ def dashboard(request):
     device, _ = Device.objects.get_or_create(
         device_id='NODEMCU-01', defaults={'name': 'Home Devices Controller'}
     )
-    reports = device.reports.all().order_by('-created_at')[:5]
+    reports = device.reports.all().order_by('-created_at')[:4]
     
     return render(request, 'dashboard.html', {
         'device': device,
